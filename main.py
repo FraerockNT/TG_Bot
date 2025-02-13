@@ -135,7 +135,7 @@ def show_student_grades(chat_id, student_name):
             keyboard.add(types.InlineKeyboardButton("+", callback_data=f"grade_{student_id}_plus"))
             keyboard.add(types.InlineKeyboardButton("-", callback_data=f"grade_{student_id}_minus"))
             bot.send_message(
-                chat_id, f"Ученик: {student_name}\n'+' = {plus}\n'-' = {minus}",
+                chat_id, f"{student_name}\n'+' = {plus}\n'-' = {minus}",
                 reply_markup=keyboard
             )
         else:
