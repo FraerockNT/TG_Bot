@@ -74,12 +74,10 @@ def handle_student_and_grade(message):
 
 
 def reset_student_grades(chat_id, class_name):
-    # Создаем клавиатуру с кнопками "Сбросить" и "Назад"
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(types.KeyboardButton("Сбросить"))
     keyboard.add(types.KeyboardButton("Назад"))
 
-    # Отправляем сообщение с предложением подтвердить сброс
     bot.send_message(chat_id, f"Вы уверены, что хотите сбросить оценки для класса {class_name}?", reply_markup=keyboard)
 
 
@@ -102,7 +100,6 @@ def confirm_reset_grades(message):
     finally:
         conn.close()
 
-    # Возвращаем пользователя к выбору класса
     send_welcome(message)
 
 
@@ -213,5 +210,4 @@ def update_student_grade(chat_id, student_id, action):
 
 
 if __name__ == '__main__':
-    # Запускаем бота
     bot.polling()
