@@ -5,7 +5,7 @@ from telebot import types
 bot = telebot.TeleBot("7769584920:AAEDsY_x6leerOIP0930Z9iBdXBFZn0tVVY")
 user_data = {}
 
-ADMIN_IDS = [5237959867, 927652138]
+ADMIN_IDS = [5237959867, 927652138, 728292764]
 
 
 def get_classes():
@@ -66,28 +66,31 @@ def handle_student_and_grade(message):
             bot.send_message(chat_id, "Сначала выберите класс.")
             return
         show_all_grades(chat_id, class_name)
+    elif message.text == "Сбросить" and chat_id in ADMIN_IDS:
+        confirm_reset_grades(message)
     else:
         student_name = message.text.strip()
         show_student_grades(chat_id, student_name)
 
 
-def update_student_grade(chat_id, student_id, action):
-    conn = sqlite3.connect('school.db')
-    cursor = conn.cursor()
-    try:
-        if action == "plus":
-            cursor.execute('UPDATE students SET plus_count = plus_count + 1 WHERE id = ?', (student_id,))
-        elif action == "minus":
-            cursor.execute('UPDATE students SET minus_count = minus_count + 1 WHERE id = ?', (student_id,))
-        conn.commit()
-        bot.answer_callback_query(chat_id, "Оценка обновлена.")
-    except sqlite3.Error as e:
-        bot.answer_callback_query(chat_id, f"Ошибка базы данных: {e}")
-    finally:
-        conn.close()
-
-
 def reset_student_grades(chat_id, class_name):
+    # Создаем клавиатуру с кнопками "Сбросить" и "Назад"
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(types.KeyboardButton("Сбросить"))
+    keyboard.add(types.KeyboardButton("Назад"))
+
+    # Отправляем сообщение с предложением подтвердить сброс
+    bot.send_message(chat_id, f"Вы уверены, что хотите сбросить оценки для класса {class_name}?", reply_markup=keyboard)
+
+
+def confirm_reset_grades(message):
+    chat_id = message.chat.id
+    class_name = user_data.get(chat_id, {}).get('class')
+
+    if class_name is None:
+        bot.send_message(chat_id, "Сначала выберите класс.")
+        return
+
     conn = sqlite3.connect('school.db')
     cursor = conn.cursor()
     try:
@@ -98,6 +101,9 @@ def reset_student_grades(chat_id, class_name):
         bot.send_message(chat_id, f"Ошибка базы данных: {e}")
     finally:
         conn.close()
+
+    # Возвращаем пользователя к выбору класса
+    send_welcome(message)
 
 
 def show_all_grades(chat_id, class_name):
@@ -190,5 +196,22 @@ def handle_grade_callback(call):
         conn.close()
 
 
+def update_student_grade(chat_id, student_id, action):
+    conn = sqlite3.connect('school.db')
+    cursor = conn.cursor()
+    try:
+        if action == "plus":
+            cursor.execute('UPDATE students SET plus_count = plus_count + 1 WHERE id = ?', (student_id,))
+        elif action == "minus":
+            cursor.execute('UPDATE students SET minus_count = minus_count + 1 WHERE id = ?', (student_id,))
+        conn.commit()
+        bot.answer_callback_query(chat_id, "Оценка обновлена.")
+    except sqlite3.Error as e:
+        bot.answer_callback_query(chat_id, f"Ошибка базы данных: {e}")
+    finally:
+        conn.close()
+
+
 if __name__ == '__main__':
+    # Запускаем бота
     bot.polling()
